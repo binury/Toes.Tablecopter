@@ -1,0 +1,12 @@
+{
+  "Id": "Toes.Tablecopter",
+  "PackPath": "tablecopter.pck",
+  "Dependencies": ["BlueberryWolfi.APIs", "Toes.Socks"],
+  "Metadata": {
+    "Name": "Tablecopter",
+    "Author": "Toes",
+    "Version": "1.2.0",
+    "Description": "Take flight and bring a friend, in a helicopter | Fly without breaking RP",
+    "Homepage": "https://github.com/binury/Toes.Tablecopter"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Tablecopter",
+  "author": "Toes",
+  "version_number": "1.2.0",
+  "website_url": "https://github.com/binury/Toes.Tablecopter",
+  "description": "Take flight and bring a friend, in a helicopter | Fly without breaking RP",
+  "dependencies": ["BlueberryWolfi-BlueberryWolfiAPIs-1.0.2", "toes-Socks-0.4.0"]
+}
