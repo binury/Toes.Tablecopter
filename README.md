@@ -43,6 +43,9 @@ For the full details, see the [LICENSE](./LICENSE.txt) file.
 
 ## Changelog
 
+### v1.2.1
+- Oops! I exported the wrong build before, sorry.
+
 ### v1.2.0
 - Initial mod loading speed drastically improved (oops)
 - Open-sourced so you guys can stop "decompiling" the mod and/or nagging me 😜
