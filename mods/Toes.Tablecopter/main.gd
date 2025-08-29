@@ -13,10 +13,15 @@
 # limitations under the License.
 extends Node
 
-var Players
+onready var Chat = get_node("/root/ToesSocks/Chat")
+onready var Players = get_node("/root/ToesSocks/Players")
+
 var KeybindAPI
 
-const TURBO_SPEED = 36.0
+const TURBO_SPEED := 36.0
+const HOTKEY_ACTION := "toggle_tablecopter"
+const HOTKEY_LABEL := "Toggle Tablecopter"
+const HOTKEY_DEFAULT := KEY_T
 
 var copter_enabled := false
 var default_sprint_speed: float
@@ -31,19 +36,15 @@ var last_crash_time: Dictionary
 
 
 func _ready():
-	Players = get_node_or_null("/root/ToesSocks/Players")
+	self.set_process_unhandled_key_input(true)
 	Players.connect("ingame", self, "_on_game_entered")
 
 	KeybindAPI = get_node_or_null("/root/BlueberryWolfiAPIs/KeybindsAPI")
 
 	var toggle_copter_signal = KeybindAPI.register_keybind(
-		{
-			"action_name": "toggle_tablecopter",
-			"title": "Toggle Tablecopter",
-			"key": KEY_T,
-		}
+		{"action_name": HOTKEY_ACTION, "title": HOTKEY_LABEL, "key": HOTKEY_DEFAULT}
 	)
-	KeybindAPI.connect(toggle_copter_signal + "_up", self, "_on_toggle_pressed")
+	KeybindAPI.connect(toggle_copter_signal, self, "_on_toggle_pressed")
 
 
 func _on_game_entered():
@@ -51,6 +52,11 @@ func _on_game_entered():
 	default_sprint_speed = Players.local_player.sprint_speed
 	var crash_sound = crash_scene.instance()
 	Players.local_player.add_child(crash_sound)
+
+	if not InputMap.has_action("toggle_tablecopter"):
+		Chat.write(
+			"[toes]: Hey! Just a friendly heads-up, you don't have any hotkey assigned for Tablecopter..."
+		)
 
 
 func _spawn_actor(uid: String):
@@ -67,15 +73,28 @@ func _spawn_actor(uid: String):
 		turbo_rotation = well.rotation
 
 
-func _on_toggle_pressed():
-	if not is_instance_valid(Players.local_player) or Players.local_player.busy:
+## -> "T"
+func _get_hotkey_binding_key_name() -> String:
+	var toggle_event: InputEvent = InputMap.get_action_list("toggle_tablecopter")[0]
+	if toggle_event == null:
+		return ""
+	return toggle_event.as_text()
+
+
+func _unhandled_key_input(event: InputEventKey) -> void:
+	if not is_instance_valid(Players.local_player) or Players.is_busy():
 		return
+	if not event.is_pressed():
+		return
+	if OS.get_scancode_string(event.scancode) != self._get_hotkey_binding_key_name():
+		return
+	## Disallow holding key down to spam toggle
+	if event.is_echo():
+		return
+	get_tree().set_input_as_handled()
 	var is_past_chat_enter_safeguard = last_time_busy + 125 <= Time.get_ticks_msec()
 	if not is_past_chat_enter_safeguard:
 		return
-
-	if Input.is_action_pressed("move_walk"):
-		is_barrel_rolling = true
 
 	if Input.is_action_pressed("move_sneak"):
 		turbo_enabled = !turbo_enabled
@@ -94,7 +113,6 @@ func _on_toggle_pressed():
 		return
 
 	copter_enabled = not copter_enabled
-#	PlayerData._send_notification("Tablecopter " + ("enabled - soisoisoi!" if copter_enabled else "disabled"))
 
 	if copter_enabled:
 		for kind in ["table", "well"]:
@@ -126,7 +144,7 @@ func get_actors_from_id(type: String, ownerID = Network.STEAM_ID):
 	return actors
 
 
-func _physics_process(dt):
+func _physics_process(__):
 	var player: Actor = Players.local_player
 
 	if not is_instance_valid(PlayerData) or not is_instance_valid(player):
