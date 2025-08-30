@@ -14,12 +14,13 @@
 extends Node
 
 onready var Chat = get_node("/root/ToesSocks/Chat")
+onready var Hotkeys = get_node("/root/ToesSocks/Hotkeys")
 onready var Players = get_node("/root/ToesSocks/Players")
 
 var KeybindAPI
 
 const TURBO_SPEED := 36.0
-const HOTKEY_ACTION := "toggle_tablecopter"
+const HOTKEY_NAME := "toggle_tablecopter"
 const HOTKEY_LABEL := "Toggle Tablecopter"
 const HOTKEY_DEFAULT := KEY_T
 
@@ -39,12 +40,17 @@ func _ready():
 	self.set_process_unhandled_key_input(true)
 	Players.connect("ingame", self, "_on_game_entered")
 
-	KeybindAPI = get_node_or_null("/root/BlueberryWolfiAPIs/KeybindsAPI")
-
-	var toggle_copter_signal = KeybindAPI.register_keybind(
-		{"action_name": HOTKEY_ACTION, "title": HOTKEY_LABEL, "key": HOTKEY_DEFAULT}
+	var toggle_signal_name = Hotkeys.add(
+		{"name": HOTKEY_NAME, "label": HOTKEY_LABEL, "key_code": HOTKEY_DEFAULT, "repeat": false }
 	)
-	KeybindAPI.connect(toggle_copter_signal, self, "_on_toggle_pressed")
+	Hotkeys.connect(toggle_signal_name, self, "_handle_toggle")
+
+	var mode_toggle_signal_name = Hotkeys.add(
+		{"name": HOTKEY_NAME + "_mode", "label": HOTKEY_LABEL + " Mode", "key_code": HOTKEY_DEFAULT, "repeat": false, "modifiers": ["control"] }
+	)
+	Hotkeys.connect(mode_toggle_signal_name, self, "_handle_mode_toggle")
+
+
 
 
 func _on_game_entered():
@@ -72,33 +78,14 @@ func _spawn_actor(uid: String):
 		var well = get_actors_from_id(uid)[0]
 		turbo_rotation = well.rotation
 
-
-## -> "T"
-func _get_hotkey_binding_key_name() -> String:
-	var toggle_event: InputEvent = InputMap.get_action_list("toggle_tablecopter")[0]
-	if toggle_event == null:
-		return ""
-	return toggle_event.as_text()
-
-
-func _unhandled_key_input(event: InputEventKey) -> void:
-	if not is_instance_valid(Players.local_player) or Players.is_busy():
-		return
-	if not event.is_pressed():
-		return
-	if OS.get_scancode_string(event.scancode) != self._get_hotkey_binding_key_name():
-		return
-	## Disallow holding key down to spam toggle
-	if event.is_echo():
-		return
-	get_tree().set_input_as_handled()
+## -> Ctrl + T
+func _handle_mode_toggle():
 	var is_past_chat_enter_safeguard = last_time_busy + 125 <= Time.get_ticks_msec()
 	if not is_past_chat_enter_safeguard:
 		return
 
-	if Input.is_action_pressed("move_sneak"):
 		turbo_enabled = !turbo_enabled
-		PlayerData._send_notification("Turbo " + ("on" if turbo_enabled else "off"))
+	Chat.notify("Turbo " + ("on" if turbo_enabled else "off"))
 		if copter_enabled:
 			if turbo_enabled:
 				Players.local_player.sprint_speed = default_sprint_speed
@@ -110,10 +97,13 @@ func _unhandled_key_input(event: InputEventKey) -> void:
 				for fire in get_actors_from_id("campfire", Network.STEAM_ID):
 					Players.local_player._wipe_actor(fire.actor_id)
 				_spawn_actor("therapist_chair")
+
+func _handle_toggle():
+	var is_past_chat_enter_safeguard = last_time_busy + 125 <= Time.get_ticks_msec()
+	if not is_past_chat_enter_safeguard:
 		return
 
 	copter_enabled = not copter_enabled
-
 	if copter_enabled:
 		for kind in ["table", "well"]:
 			_spawn_actor(kind)
