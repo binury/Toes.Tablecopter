@@ -86,17 +86,17 @@ func _handle_mode_toggle():
 
 		turbo_enabled = !turbo_enabled
 	Chat.notify("Turbo " + ("on" if turbo_enabled else "off"))
-		if copter_enabled:
-			if turbo_enabled:
-				Players.local_player.sprint_speed = default_sprint_speed
-				for chair in get_actors_from_id("therapist_chair", Network.STEAM_ID):
-					Players.local_player._wipe_actor(chair.actor_id)
-				_spawn_actor("campfire")
-			else:
-				Players.local_player.sprint_speed = TURBO_SPEED
-				for fire in get_actors_from_id("campfire", Network.STEAM_ID):
-					Players.local_player._wipe_actor(fire.actor_id)
-				_spawn_actor("therapist_chair")
+	if copter_enabled:
+		if turbo_enabled:
+			Players.local_player.sprint_speed = default_sprint_speed
+			for chair in get_actors_from_id("therapist_chair", Network.STEAM_ID):
+				Players.local_player._wipe_actor(chair.actor_id)
+			_spawn_actor("campfire")
+		else:
+			Players.local_player.sprint_speed = TURBO_SPEED
+			for fire in get_actors_from_id("campfire", Network.STEAM_ID):
+				Players.local_player._wipe_actor(fire.actor_id)
+			_spawn_actor("therapist_chair")
 
 func _handle_toggle():
 	var is_past_chat_enter_safeguard = last_time_busy + 125 <= Time.get_ticks_msec()
