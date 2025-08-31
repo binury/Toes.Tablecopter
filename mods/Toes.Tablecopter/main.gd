@@ -144,6 +144,12 @@ func _physics_process(__):
 	if player.busy:
 		last_time_busy = Time.get_ticks_msec()
 
+	var sushitime = get_node_or_null("/root/officerballssushitime")
+	if sushitime != null:
+		sushitime.ricestationopen = copter_enabled
+#		if sushitime.get("hudlink") != null:
+#			sushitime.hudlink.interact = !copter_enabled
+
 	if not copter_enabled:
 		return
 
