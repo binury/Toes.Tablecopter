@@ -42,6 +42,10 @@ For the full details, see the [LICENSE](./LICENSE.txt) file.
 
 ## Changelog
 
+### v1.3.1 - Hotfixed Toggling Turbo
+
+- The occasional quirks of a programming language with indentation based syntax
+
 ### v1.3.0 - Refactoring
 
 - Slight change to UX/feel of toggling on/off Tablecopter
