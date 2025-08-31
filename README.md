@@ -42,9 +42,9 @@ For the full details, see the [LICENSE](./LICENSE.txt) file.
 
 ## Changelog
 
-### v1.3.1 - Hotfixed Toggling Turbo
+### v1.3.2 - Fixes
 
-- The occasional quirks of a programming language with indentation based syntax
+- Patched out pop-up messages from SushiTime mod showing while flying a Tablecopter
 
 ### v1.3.0 - Refactoring
 
