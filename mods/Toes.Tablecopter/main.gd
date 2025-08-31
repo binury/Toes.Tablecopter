@@ -84,7 +84,7 @@ func _handle_mode_toggle():
 	if not is_past_chat_enter_safeguard:
 		return
 
-		turbo_enabled = !turbo_enabled
+	turbo_enabled = !turbo_enabled
 	Chat.notify("Turbo " + ("on" if turbo_enabled else "off"))
 	if copter_enabled:
 		if turbo_enabled:
