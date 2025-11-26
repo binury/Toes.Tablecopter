@@ -19,7 +19,7 @@ onready var Players = get_node("/root/ToesSocks/Players")
 
 var KeybindAPI
 
-const TURBO_SPEED := 36.0
+const TURBO_SPEED := 20.0
 const HOTKEY_NAME := "toggle_tablecopter"
 const HOTKEY_LABEL := "Toggle Tablecopter"
 const HOTKEY_DEFAULT := KEY_T
@@ -99,6 +99,7 @@ func _handle_mode_toggle():
 			_spawn_actor("therapist_chair")
 
 func _handle_toggle():
+	var player = Players.local_player
 	var is_past_chat_enter_safeguard = last_time_busy + 125 <= Time.get_ticks_msec()
 	if not is_past_chat_enter_safeguard:
 		return
@@ -122,6 +123,8 @@ func _handle_toggle():
 		for fire in get_actors_from_id("campfire", Network.STEAM_ID):
 			Players.local_player._wipe_actor(fire.actor_id)
 		Players.local_player.sprint_speed = default_sprint_speed
+#		Players.local_player.rotation = lerp(player.rotation, Vector3(0.0, 0.0, 0.0), 5.0)
+		Players.local_player.rotation = Vector3(0.0, 0.0, 0.0)
 
 
 func get_actors_from_id(type: String, ownerID = Network.STEAM_ID):
@@ -134,7 +137,7 @@ func get_actors_from_id(type: String, ownerID = Network.STEAM_ID):
 	return actors
 
 
-func _physics_process(__):
+func _physics_process(delta):
 	var player: Actor = Players.local_player
 
 	if not is_instance_valid(PlayerData) or not is_instance_valid(player):
@@ -166,8 +169,14 @@ func _physics_process(__):
 		"whoopie": Transform(Basis(), Vector3(0, 1.0, 0.125))
 	}
 
-	var is_not_chatting = Players.local_player.busy == false
+	var is_not_chatting = player.busy == false
 	var should_update_table = true
+	
+
+#	if not player.in_air and not player.is_on_floor():
+#		player.rotation = lerp(player.rotation, player.camera.rotation, delta * 3.0)
+	player.rotation = lerp(player.rotation, Vector3(player.camera.rotation.x + 0.15, player.camera.rotation.y, player.camera.rotation.z), delta * 10.0)
+
 
 	# Player pos
 	var skeleton: Skeleton = player.get_node("body/player_body/Armature/Skeleton")
@@ -182,6 +191,8 @@ func _physics_process(__):
 #	well.rotation_degrees.y += 0.5
 
 	well.global_transform = torso_global_transform * offsets["well"]
+	if not player.in_air and not player.is_on_floor():
+		well.rotation = lerp(well.rotation, player.camera.rotation, delta * 5.0)
 	Network._send_P2P_Packet(
 		{
 			"type": "actor_update",
@@ -201,7 +212,7 @@ func _physics_process(__):
 		and is_not_chatting
 	)
 	if should_maintain_lift and not Input.is_action_pressed("move_jump"):
-		offset = offsets["table"]
+			offset = offsets["table"]
 	elif Input.is_action_pressed("move_jump") and is_not_chatting:
 		offset = Transform(Basis(), Vector3(0, -0.95, 0.125))
 	else:
@@ -214,6 +225,8 @@ func _physics_process(__):
 		return
 
 	bush.global_transform = torso_global_transform * offset
+	if not player.in_air and not player.is_on_floor():
+		bush.rotation = Vector3(player.camera.rotation.x, bush.rotation.y, bush.rotation.z)
 
 	if should_update_table:
 		Network._send_P2P_Packet(
@@ -234,7 +247,10 @@ func _physics_process(__):
 		var backseat = backseats[0] if backseats.size() >= 1 else null
 		if not propType == "table" or not is_instance_valid(backseat):
 			return
+#		backseat.rotation = lerp(backseat.rotation, Vector3(backseat.rotation.x, backseat.rotation.y, backseat.rotation.z), delta * 20.0)
 		backseat.global_transform = bush.global_transform * offsets.therapist_chair
+		if not player.is_on_floor():
+			backseat.rotation = Vector3(player.camera.rotation.x, backseat.rotation.y, backseat.rotation.z)
 		Network._send_P2P_Packet(
 			{
 				"type": "actor_update",
@@ -265,6 +281,8 @@ func _physics_process(__):
 #		turbo_rotation = fire.rotation.x
 		fire.global_transform = torso_global_transform * offsets["campfire"]
 		fire.rotation.x = 17.5
+		if not player.is_on_floor():
+			fire.rotation = Vector3(fire.rotation.x, fire.rotation.y, player.camera.rotation.z)
 		Network._send_P2P_Packet(
 			{
 				"type": "actor_update",
